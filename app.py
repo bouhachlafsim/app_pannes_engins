@@ -4,15 +4,14 @@ import sqlite3
 from werkzeug.utils import secure_filename
 from datetime import datetime
 
-# Initialisation de Flask
 app = Flask(__name__)
 
-# Dossier pour les images
+# Dossier des images
 UPLOAD_FOLDER = os.path.join('static', 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# ✅ Créer automatiquement la base SQLite et la table si elles n'existent pas
+# Création automatique de la base si elle n'existe pas
 def init_db():
     if not os.path.exists('pannes.db'):
         with sqlite3.connect('pannes.db') as conn:
@@ -26,12 +25,12 @@ def init_db():
                 )
             ''')
 
-# ✅ Route d'accueil
+# Page d'accueil
 @app.route('/')
 def accueil():
     return render_template('accueil.html')
 
-# ✅ Route pour ajouter une panne
+# Ajouter une panne
 @app.route('/ajouter', methods=['GET', 'POST'])
 def ajouter():
     if request.method == 'POST':
@@ -52,11 +51,11 @@ def ajouter():
                 (date, heure, description, image_path)
             )
 
-        return redirect(url_for('ajouter'))  # reste sur la même page
+        return redirect(url_for('ajouter'))
 
     return render_template('ajouter.html')
 
-# ✅ Route pour afficher les pannes
+# Afficher les engins en panne
 @app.route('/pannes')
 def pannes():
     with sqlite3.connect('pannes.db') as conn:
@@ -64,22 +63,25 @@ def pannes():
         pannes = conn.execute("SELECT * FROM pannes ORDER BY id DESC").fetchall()
     return render_template('pannes.html', pannes=pannes)
 
-# ✅ Route pour supprimer une panne
+# Supprimer une panne (image incluse)
 @app.route('/supprimer/<int:id>', methods=['POST'])
 def supprimer(id):
     with sqlite3.connect('pannes.db') as conn:
         cur = conn.cursor()
         cur.execute("SELECT image FROM pannes WHERE id = ?", (id,))
         row = cur.fetchone()
-        if row and row['image']:
-            image_path = row['image'].lstrip('/')
-            if os.path.exists(image_path):
-                os.remove(image_path)
+        if row and row[0]:
+            image_path = os.path.join(os.getcwd(), row[0].lstrip('/'))
+            try:
+                if os.path.exists(image_path):
+                    os.remove(image_path)
+            except Exception as e:
+                print(f"Erreur suppression image : {e}")
         cur.execute("DELETE FROM pannes WHERE id = ?", (id,))
         conn.commit()
     return redirect(url_for('pannes'))
 
-# ✅ Lancer le serveur localement
+# Lancer l'application
 if __name__ == '__main__':
     init_db()
     app.run(debug=True)
