@@ -3,29 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ajouter une panne – Gestion des engins</title>
+    <title>Résoudre une panne – Gestion des engins</title>
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
-            background-color: #f3f6fa;
+            background-color: #f2f5f9;
             padding: 20px;
             margin: 0;
         }
+
         h1 {
             text-align: center;
-            color: #004080;
+            color: #007bff;
             margin-bottom: 30px;
-            font-size: 1.6em;
+            font-size: 1.5em;
         }
+
         .logo-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
+
         .logo-container img {
             height: 40px;
         }
+
         @media (min-width: 600px) {
             .logo-container img {
                 height: 60px;
@@ -34,14 +38,16 @@
                 font-size: 2em;
             }
         }
+
         form {
-            max-width: 550px;
+            max-width: 500px;
             margin: auto;
             background-color: white;
             padding: 30px;
             border-radius: 12px;
             box-shadow: 0 0 12px rgba(0, 0, 0, 0.08);
         }
+
         label {
             display: block;
             margin-top: 20px;
@@ -49,10 +55,8 @@
             font-weight: bold;
             color: #333;
         }
-        input[type="file"],
-        input[type="date"],
-        input[type="time"],
-        textarea {
+
+        input[type="datetime-local"] {
             width: 100%;
             padding: 10px;
             font-size: 15px;
@@ -60,23 +64,23 @@
             border-radius: 6px;
             box-sizing: border-box;
         }
-        textarea {
-            resize: vertical;
-        }
+
         button {
-            margin-top: 30px;
+            margin-top: 25px;
             width: 100%;
             padding: 12px;
-            background-color: #004080;
+            background-color: #007bff;
             color: white;
             border: none;
             border-radius: 6px;
             font-size: 16px;
             cursor: pointer;
         }
+
         button:hover {
-            background-color: #002f5f;
+            background-color: #0056b3;
         }
+
         .back-button {
             margin-top: 20px;
             display: block;
@@ -85,9 +89,11 @@
             color: #004080;
             font-weight: bold;
         }
+
         .back-button:hover {
             text-decoration: underline;
         }
+
         footer {
             margin-top: 40px;
             text-align: center;
@@ -95,13 +101,6 @@
             color: gray;
         }
     </style>
-    <script>
-        function concatDateTime() {
-            const date = document.getElementById("date").value;
-            const time = document.getElementById("time").value;
-            document.getElementById("date_heure").value = date + "T" + time;
-        }
-    </script>
 </head>
 <body>
 
@@ -111,25 +110,14 @@
     <img src="https://event.businessfrance.fr/forum-annuel-vie/wp-content/uploads/sites/1242/2023/07/Logo-VINCI_CONSTRUCTION_DIGI_RVB.png" alt="Vinci Construction">
 </div>
 
-<form method="POST" enctype="multipart/form-data" onsubmit="concatDateTime()">
-    <label for="image">📷 Photo de l'engin</label>
-    <input type="file" name="image" accept="image/*" capture="environment" required>
+<form action="{{ url_for('regler', id=id) }}" method="POST">
+    <label for="date_heure_fin">📅 Date et heure de résolution</label>
+    <input type="datetime-local" name="date_heure_fin" required>
 
-    <label for="date">📅 Date de la panne</label>
-    <input type="date" id="date" required>
-
-    <label for="time">⏰ Heure de la panne</label>
-    <input type="time" id="time" required>
-
-    <label for="description">📝 Description de la panne</label>
-    <textarea name="description" rows="4" required></textarea>
-
-    <input type="hidden" name="date_heure" id="date_heure">
-
-    <button type="submit">➕ Ajouter la panne</button>
+    <button type="submit">✅ Valider la résolution</button>
 </form>
 
-<a href="{{ url_for('accueil') }}" class="back-button">← Retour à l'accueil</a>
+<a href="{{ url_for('pannes') }}" class="back-button">← Retour aux engins en panne</a>
 
 <footer>
     &copy; {{ year }} Sogea Maroc & Vinci Construction – Suivi des engins en panne<br>

@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Engins en panne – Gestion</title>
+    <title>Engins réparés – Gestion</title>
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
-            background-color: #f2f4f8;
+            background-color: #f4f8fb;
             padding: 20px;
             margin: 0;
         }
 
         h1 {
-            color: #cc0000;
+            color: #28a745;
             text-align: center;
             margin-bottom: 30px;
             font-size: 1.5em;
@@ -56,7 +56,7 @@
         }
 
         th {
-            background-color: #cc0000;
+            background-color: #28a745;
             color: white;
         }
 
@@ -72,17 +72,17 @@
             transform: scale(1.05);
         }
 
-        .btn {
-            padding: 8px 14px;
-            background-color: #28a745;
+        form button {
+            padding: 6px 12px;
+            background-color: #dc3545;
             color: white;
-            text-decoration: none;
+            border: none;
             border-radius: 4px;
-            display: inline-block;
+            cursor: pointer;
         }
 
-        .btn:hover {
-            background-color: #218838;
+        form button:hover {
+            background-color: #c82333;
         }
 
         .back-button {
@@ -106,7 +106,7 @@
             color: gray;
         }
 
-        /* Zoom modal */
+        /* Zoom modale */
         .modal {
             display: none;
             position: fixed;
@@ -146,29 +146,37 @@
     <img src="https://event.businessfrance.fr/forum-annuel-vie/wp-content/uploads/sites/1242/2023/07/Logo-VINCI_CONSTRUCTION_DIGI_RVB.png" alt="Vinci Construction">
 </div>
 
-{% if pannes %}
+{% if regles %}
 <table>
     <thead>
         <tr>
             <th>Image</th>
-            <th>Date et heure</th>
+            <th>Date début</th>
+            <th>Date fin</th>
             <th>Description</th>
-            <th>Action</th>
+            <th>Durée</th>
+            <th>Supprimer</th>
         </tr>
     </thead>
     <tbody>
-        {% for panne in pannes %}
+        {% for regle in regles %}
         <tr>
-            <td><img src="{{ url_for('static', filename='images/' ~ panne[1]) }}" onclick="openModal(this.src)"></td>
-            <td>{{ panne[3].replace('T', ' ') }}</td>
-            <td>{{ panne[2] }}</td>
-            <td><a class="btn" href="{{ url_for('resoudre', id=panne[0]) }}">Réglé</a></td>
+            <td><img src="{{ url_for('static', filename='images/' ~ regle[1]) }}" onclick="openModal(this.src)"></td>
+            <td>{{ regle[2].replace('T', ' ') }}</td>
+            <td>{{ regle[3].replace('T', ' ') }}</td>
+            <td>{{ regle[4] }}</td>
+            <td>{{ regle[5] }}</td>
+            <td>
+                <form action="{{ url_for('supprimer', id=regle[0]) }}" method="POST">
+                    <button type="submit">Supprimer</button>
+                </form>
+            </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
 {% else %}
-<p>Aucune panne enregistrée pour le moment.</p>
+<p>Aucun engin réparé pour le moment.</p>
 {% endif %}
 
 <a href="{{ url_for('accueil') }}" class="back-button">← Retour à l'accueil</a>

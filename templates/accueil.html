@@ -1,28 +1,106 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Accueil - Engins en panne</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accueil – Gestion des engins en panne</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #eef2f7;
+            text-align: center;
+        }
+
+        h1 {
+            color: #004080;
+            margin-bottom: 30px;
+            font-size: 1.5em;
+        }
+
+        .logo-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .logo-container img {
+            height: 40px;
+        }
+
+        @media (min-width: 600px) {
+            .logo-container img {
+                height: 60px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+            max-width: 400px;
+            margin: auto;
+        }
+
+        .section {
+            width: 100%;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            background-color: white;
+            transition: transform 0.2s ease;
+        }
+
+        .section:hover {
+            transform: scale(1.02);
+        }
+
+        .section a {
+            display: block;
+            text-decoration: none;
+            font-size: 1.1em;
+            color: #004080;
+            font-weight: bold;
+        }
+
+        footer {
+            margin-top: 40px;
+            font-size: 0.9em;
+            color: gray;
+        }
+    </style>
 </head>
-<body class="bg-light">
+<body>
 
-  <div class="container text-center mt-5">
-    <!-- Logos -->
-    <div class="mb-4">
-      <img src="https://sogea-maroc.com/wp-content/uploads/sites/10/2023/11/sogea-maroc-h-cmjn.png" height="70" class="me-3" alt="Sogea">
-      <img src="https://www.alphatec.net/wp-content/uploads/2020/12/Vinci-Construction-Logo.png" height="70" alt="Vinci">
+<div class="logo-container">
+    <img src="https://sogea-maroc.com/wp-content/uploads/sites/10/2023/11/sogea-maroc-h-cmjn.png" alt="Sogea Maroc">
+    <h1>🚧 Gestion des engins en panne – PAP-MPH</h1>
+    <img src="https://event.businessfrance.fr/forum-annuel-vie/wp-content/uploads/sites/1242/2023/07/Logo-VINCI_CONSTRUCTION_DIGI_RVB.png" alt="Vinci Construction">
+</div>
+
+<div class="container">
+    <div class="section">
+        <a href="{{ url_for('ajouter_panne') }}">➕ Ajouter un engin en panne</a>
     </div>
-
-    <h1 class="mb-4">🚧 Gestion des engins en panne</h1>
-
-    <!-- Boutons -->
-    <div class="d-grid gap-3 col-10 col-md-6 mx-auto">
-      <a href="/ajouter" class="btn btn-success btn-lg">➕ Ajouter une panne</a>
-      <a href="/pannes" class="btn btn-primary btn-lg">📋 Voir les pannes</a>
+    <div class="section">
+        <a href="{{ url_for('pannes') }}">🚧 Voir les engins en panne</a>
     </div>
-  </div>
+    <div class="section">
+        <a href="{{ url_for('regles') }}">✅ Voir les engins réparés</a>
+    </div>
+</div>
+
+<footer>
+    &copy; {{ year }} Sogea Maroc & Vinci Construction – Suivi des engins en panne<br>
+    Développé par Mohamed Bouhachlaf
+</footer>
 
 </body>
 </html>
