@@ -1,87 +1,107 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash
 import os
 import sqlite3
-from werkzeug.utils import secure_filename
 from datetime import datetime
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
+app.secret_key = 'votre_cle_secrete'  # Utile pour les messages flash
 
-# Dossier des images
-UPLOAD_FOLDER = os.path.join('static', 'uploads')
+UPLOAD_FOLDER = 'static/images'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Création automatique de la base si elle n'existe pas
-def init_db():
-    if not os.path.exists('pannes.db'):
-        with sqlite3.connect('pannes.db') as conn:
-            conn.execute('''
-                CREATE TABLE IF NOT EXISTS pannes (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    date TEXT NOT NULL,
-                    heure TEXT NOT NULL,
-                    description TEXT NOT NULL,
-                    image TEXT
-                )
-            ''')
-
-# Page d'accueil
+# -------------------------- Page d'accueil --------------------------
 @app.route('/')
 def accueil():
-    return render_template('accueil.html')
+    return render_template('accueil.html', year=2025)
 
-# Ajouter une panne
+# -------------------------- Ajouter une panne --------------------------
 @app.route('/ajouter', methods=['GET', 'POST'])
-def ajouter():
+def ajouter_panne():
     if request.method == 'POST':
-        date = request.form['date']
-        heure = request.form['heure']
+        image = request.files['image']
+        date_heure = request.form['date_heure']
         description = request.form['description']
-        image_file = request.files['image']
 
-        image_path = ""
-        if image_file and image_file.filename != '':
-            filename = datetime.now().strftime("%Y%m%d%H%M%S_") + secure_filename(image_file.filename)
-            image_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            image_path = f"/static/uploads/{filename}"
+        if image:
+            filename = secure_filename(image.filename)
+            image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            image.save(image_path)
 
-        with sqlite3.connect('pannes.db') as conn:
-            conn.execute(
-                "INSERT INTO pannes (date, heure, description, image) VALUES (?, ?, ?, ?)",
-                (date, heure, description, image_path)
-            )
+            conn = sqlite3.connect('pannes.db')
+            c = conn.cursor()
+            c.execute('''INSERT INTO pannes (image, date_heure, description) VALUES (?, ?, ?)''',
+                      (filename, date_heure, description))
+            conn.commit()
+            conn.close()
+            return redirect(url_for('pannes'))
 
-        return redirect(url_for('ajouter'))
+    return render_template('ajouter.html', year=2025)
 
-    return render_template('ajouter.html')
-
-# Afficher les engins en panne
+# -------------------------- Voir les pannes --------------------------
 @app.route('/pannes')
 def pannes():
-    with sqlite3.connect('pannes.db') as conn:
-        conn.row_factory = sqlite3.Row
-        pannes = conn.execute("SELECT * FROM pannes ORDER BY id DESC").fetchall()
-    return render_template('pannes.html', pannes=pannes)
+    conn = sqlite3.connect('pannes.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM pannes")
+    pannes = c.fetchall()
+    conn.close()
+    return render_template('pannes.html', pannes=pannes, year=2025)
 
-# Supprimer une panne (image incluse)
+# -------------------------- Résoudre une panne --------------------------
+@app.route('/resoudre/<int:id>', methods=['GET'])
+def resoudre(id):
+    return render_template('resoudre.html', id=id, year=2025)
+
+@app.route('/regler/<int:id>', methods=['POST'])
+def regler(id):
+    date_heure_fin = request.form.get('date_heure_fin')
+
+    conn = sqlite3.connect('pannes.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM pannes WHERE id = ?", (id,))
+    panne = c.fetchone()
+
+    if panne:
+        try:
+            date_heure_debut = datetime.strptime(panne[3], "%Y-%m-%dT%H:%M")
+            date_heure_fin_dt = datetime.strptime(date_heure_fin, "%Y-%m-%dT%H:%M")
+        except ValueError:
+            flash("Date invalide. Veuillez respecter le format YYYY-MM-DDTHH:MM", "danger")
+            return redirect(url_for('pannes'))
+
+        duree = date_heure_fin_dt - date_heure_debut
+
+        c.execute('''INSERT INTO regles (image, date_heure_debut, date_heure_fin, description, duree) 
+                     VALUES (?, ?, ?, ?, ?)''',
+                  (panne[1], panne[3], date_heure_fin, panne[2], str(duree)))
+        c.execute("DELETE FROM pannes WHERE id = ?", (id,))
+        conn.commit()
+    conn.close()
+    return redirect(url_for('regles'))
+
+# -------------------------- Voir les engins réglés --------------------------
+@app.route('/regles')
+def regles():
+    conn = sqlite3.connect('pannes.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM regles")
+    regles = c.fetchall()
+    conn.close()
+    return render_template('regles.html', regles=regles, year=2025)
+
+# -------------------------- Supprimer un engin réglé --------------------------
 @app.route('/supprimer/<int:id>', methods=['POST'])
 def supprimer(id):
-    with sqlite3.connect('pannes.db') as conn:
-        cur = conn.cursor()
-        cur.execute("SELECT image FROM pannes WHERE id = ?", (id,))
-        row = cur.fetchone()
-        if row and row[0]:
-            image_path = os.path.join(os.getcwd(), row[0].lstrip('/'))
-            try:
-                if os.path.exists(image_path):
-                    os.remove(image_path)
-            except Exception as e:
-                print(f"Erreur suppression image : {e}")
-        cur.execute("DELETE FROM pannes WHERE id = ?", (id,))
-        conn.commit()
-    return redirect(url_for('pannes'))
+    conn = sqlite3.connect('pannes.db')
+    c = conn.cursor()
+    c.execute("DELETE FROM regles WHERE id = ?", (id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('regles'))
 
-# Lancer l'application
+# -------------------------- Lancer l'application --------------------------
 if __name__ == '__main__':
-    init_db()
+    if not os.path.exists(UPLOAD_FOLDER):
+        os.makedirs(UPLOAD_FOLDER)
     app.run(debug=True)
